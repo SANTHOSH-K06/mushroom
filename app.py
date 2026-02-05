@@ -2,46 +2,62 @@ import streamlit as st
 import pandas as pd
 import pickle
 from sklearn.preprocessing import LabelEncoder
+import os
 
-# Page config
-st.set_page_config(page_title="Mushroom Classifier 🍄", layout="centered")
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(
+    page_title="Mushroom Classifier 🍄",
+    layout="centered"
+)
 
 st.title("🍄 Mushroom Classification App")
 st.write("Predict whether a mushroom is **Edible** or **Poisonous**")
 
-# Load model
-with open("mushroom_model.pkl", "rb") as file:
-    model = pickle.load(file)
+# ---------------- LOAD MODEL ----------------
+MODEL_PATH = "mushroom_model.pkl"
+DATA_PATH = "mushroom_classification.csv"
 
-# Load dataset (only to get column names & categories)
-df = pd.read_csv("mushroom_classification.csv")
+if not os.path.exists(MODEL_PATH):
+    st.error("❌ Model file not found: mushroom_model.pkl")
+    st.stop()
+
+if not os.path.exists(DATA_PATH):
+    st.error("❌ Dataset file not found: mushroom_classification.csv")
+    st.stop()
+
+with open(MODEL_PATH, "rb") as f:
+    model = pickle.load(f)
+
+# ---------------- LOAD DATA ----------------
+df = pd.read_csv(DATA_PATH)
 
 # Separate features
 X = df.drop("class", axis=1)
 
 st.subheader("🔎 Enter Mushroom Features")
 
+# ---------------- USER INPUT ----------------
 user_input = {}
 
-# Create dropdowns for each feature
 for col in X.columns:
     user_input[col] = st.selectbox(
-        col,
+        label=col.replace("-", " ").title(),
         options=sorted(df[col].unique())
     )
 
-# Convert input to DataFrame
 input_df = pd.DataFrame([user_input])
 
-# Encode input same way as training
-encoder = LabelEncoder()
-for col in input_df.columns:
-    encoder.fit(df[col])
-    input_df[col] = encoder.transform(input_df[col])
+# ---------------- ENCODING ----------------
+encoded_df = input_df.copy()
 
-# Predict
-if st.button("Predict"):
-    prediction = model.predict(input_df)[0]
+for col in encoded_df.columns:
+    le = LabelEncoder()
+    le.fit(df[col])               # fit on training column
+    encoded_df[col] = le.transform(encoded_df[col])
+
+# ---------------- PREDICTION ----------------
+if st.button("Predict 🍄"):
+    prediction = model.predict(encoded_df)[0]
 
     if prediction == 0:
         st.success("✅ This mushroom is **EDIBLE**")
