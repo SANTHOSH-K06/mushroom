@@ -13,18 +13,20 @@ st.set_page_config(
 st.title("🍄 Mushroom Classification App")
 st.write("Predict whether a mushroom is **Edible** or **Poisonous**")
 
-# ---------------- LOAD MODEL ----------------
+# ---------------- FILE PATHS ----------------
 MODEL_PATH = "mushroom_model.pkl"
 DATA_PATH = "mushroom_classification.csv"
 
+# ---------------- FILE CHECKS ----------------
 if not os.path.exists(MODEL_PATH):
-    st.error("❌ Model file not found: mushroom_model.pkl")
+    st.error("❌ mushroom_model.pkl not found")
     st.stop()
 
 if not os.path.exists(DATA_PATH):
-    st.error("❌ Dataset file not found: mushroom_classification.csv")
+    st.error("❌ mushroom_classification.csv not found")
     st.stop()
 
+# ---------------- LOAD MODEL ----------------
 with open(MODEL_PATH, "rb") as f:
     model = pickle.load(f)
 
@@ -38,7 +40,6 @@ st.subheader("🔎 Enter Mushroom Features")
 
 # ---------------- USER INPUT ----------------
 user_input = {}
-
 for col in X.columns:
     user_input[col] = st.selectbox(
         label=col.replace("-", " ").title(),
@@ -52,7 +53,7 @@ encoded_df = input_df.copy()
 
 for col in encoded_df.columns:
     le = LabelEncoder()
-    le.fit(df[col])               # fit on training column
+    le.fit(df[col])          # fit encoder on training data
     encoded_df[col] = le.transform(encoded_df[col])
 
 # ---------------- PREDICTION ----------------
